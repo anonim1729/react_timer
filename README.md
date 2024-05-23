@@ -12,7 +12,7 @@ A simple and stylish timer application built with React and TailwindCSS.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/react-timer-app.git
+   git clone https://github.com/anonim1729/react_timer.git
    cd react-timer-app
 
 2. Run 
