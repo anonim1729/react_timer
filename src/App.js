@@ -1,16 +1,48 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import 'tailwindcss/tailwind.css';
+import Time from './Time';
+import Buttons from './Buttons';
+import LapTable from './LapTable';
+import timeDifference from './timeDifference';
 
 function App() {
   const [timerOn, setTimerOn] = useState(false);
+  const [lapItems, setLapItems] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
   const [second, setSecond] = useState(0);
+  const [seconds, setSeconds] = useState('');
+  const [minutes, setMinutes] = useState('');
+  const [micros, setMicros] = useState('');
+
+
+  const findMinutes = (second) => {
+    return Math.floor(second / 6000);
+  };
+
+  const findSeconds = (second) => {
+    return Math.floor((second / 100) % 60);
+  };
+
+  const findMicroSeconds = (second) => {
+    return second % 100;
+  };
+
+  useEffect(() => {
+    const mins = findMinutes(second).toString().padStart(2, '0');
+    const secs = findSeconds(second).toString().padStart(2, '0');
+    const microSecs = findMicroSeconds(second).toString().padStart(2, '0');
+    setSeconds(secs);
+    setMinutes(mins);
+    setMicros(microSecs);
+  }, [second])
+
+
   const timer = useRef(0);
 
   const handleStart = () => {
     timer.current = setInterval(() => {
       setSecond(prev => prev + 1);
-    }, 1000);
+    }, 10);
     setTimerOn(true);
   };
 
@@ -23,7 +55,7 @@ function App() {
   const handleResume = () => {
     timer.current = setInterval(() => {
       setSecond(prev => prev + 1);
-    }, 1000);
+    }, 10);
     setIsPaused(false);
   };
 
@@ -33,46 +65,38 @@ function App() {
     setTimerOn(false);
     setSecond(0);
     setIsPaused(false);
+    setLapItems([]);
   };
+
+  const handleLap = () => {
+    const newLap = {
+      lap: lapItems.length ? timeDifference(minutes + ':' + seconds + ':' + micros, lapItems[lapItems.length - 1].total) : minutes + ':' + seconds + ':' + micros,
+      total: minutes + ':' + seconds + ':' + micros
+    };
+    const newLapItems = [...lapItems, newLap];
+    setLapItems(newLapItems);
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-600 text-white">
       <div className="text-center mb-8">
-        <p className="text-6xl font-bold mb-4">Seconds: {second}</p>
-        <div className="space-x-4">
-          {!timerOn ? (
-            <button
-              className="px-6 py-3 bg-green-500 text-white rounded-full shadow-md hover:bg-green-600 focus:outline-none"
-              onClick={handleStart}
-            >
-              Start
-            </button>
-          ) : (
-            <>
-              {isPaused ? (
-                <button
-                  className="px-6 py-3 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 focus:outline-none"
-                  onClick={handleResume}
-                >
-                  Resume
-                </button>
-              ) : (
-                <button
-                  className="px-6 py-3 bg-yellow-500 text-white rounded-full shadow-md hover:bg-yellow-600 focus:outline-none"
-                  onClick={handlePause}
-                >
-                  Pause
-                </button>
-              )}
-              <button
-                className="px-6 py-3 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 focus:outline-none"
-                onClick={handleReset}
-              >
-                Reset
-              </button>
-            </>
-          )}
-        </div>
+        <Time
+          seconds={seconds}
+          minutes={minutes}
+          microSeconds={micros}
+        />
+        <Buttons
+          timerOn={timerOn}
+          handleLap={handleLap}
+          handlePause={handlePause}
+          handleResume={handleResume}
+          handleReset={handleReset}
+          handleStart={handleStart}
+          isPaused={isPaused}
+        />
+        <LapTable
+          laps={lapItems}
+        />
       </div>
     </div>
   );
